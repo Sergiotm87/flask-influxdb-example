@@ -1,0 +1,40 @@
+#!/bin/bash
+
+# get docker image
+docker pull influxdb
+
+# generate default config file
+docker run --rm influxdb influxd config > influxdb.conf
+
+# run image with test parameters
+docker run -d -p 8086:8086 \
+-e INFLUXDB_ADMIN_USER='admin' \
+-e INFLUXDB_ADMIN_PASSWORD='password' \
+-v $PWD/influxdb.conf:/etc/influxdb/influxdb.conf:ro \
+influxdb -config /etc/influxdb/influxdb.conf
+
+#edit flask_influxdb with correct values
+...
+app.config.setdefault('INFLUXDB_HOST', '172.17.0.3')
+app.config.setdefault('INFLUXDB_PORT', '8086')
+app.config.setdefault('INFLUXDB_USER', 'admin')
+app.config.setdefault('INFLUXDB_PASSWORD', 'password')
+...
+
+## use 
+
+python example.py
+
+curl localhost:5000/newdb/test1
+curl localhost:5000/test1/write
+curl localhost:5000/test1/read
+
+##TODO
+add flask to nginx server
+add another 'write' route to use external api
+add params to 'read' route ex. -from_date -to_date
+
+---------------------------------------------------------------------------------------------
+# references
+https://github.com/btashton/flask-influxdb
+http://influxdb-python.readthedocs.io/en/latest/examples.html#influxdb-python-examples
